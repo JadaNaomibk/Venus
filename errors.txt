@@ -1,0 +1,25 @@
+10.17 errors
+
+1.Error connecting to MongoDB: The `uri` parameter to `openUri()` must be a string, got "undefined".
+- THIS IS A MISSING .ENV FILE OR MONGO UR IS UNDEFINES
+
+Solution
+- PORT=5000
+MONGO_URI=mongodb://127.0.0.1:27017/venus_savings
+JWT_SECRET=change-this-secret
+CLIENT_URL=http://localhost:5173
+COOKIE_SECURE=false
+
+2.Mongo wasnt installed 
+
+3.Port conflcit - change port and edit port value in api.js and env
+
+4.npm install ran in wrong foler - this command must be executed server or client side not in project root
+
+backend-  cd server
+npm install
+npm run dev
+
+frontend- cd client
+npm install
+npm run dev

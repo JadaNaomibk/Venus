@@ -1,9 +1,8 @@
 // server.js
-// simple backend for Venus (NO MongoDB).
-// - uses Express
-// - keeps users + savings goals in memory only
-// - has register / login / logout
-// - has basic savings routes that require login
+// Simple Express backend for Venus auth + lockable savings (IN MEMORY ONLY)
+// - no Mongo, no external routes
+// - /api/auth/register, /api/auth/login, /api/auth/logout
+// - /api/savings (list + create + emergency withdraw)
 
 import express from 'express'
 import dotenv from 'dotenv'
@@ -12,29 +11,30 @@ import cors from 'cors'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 
-// load .env variables (PORT, CLIENT_URL, JWT_SECRET, etc.)
 dotenv.config()
 
 const app = express()
 
-// ==== in-memory "database" ====
-// this is just for your prototype.
-// when you close the server, all data disappears.
-const users = [] // [{ id, email, passwordHash }]
-const savingsByUserId = {} // { userId: [goals] }
+// ===== In-memory "database" =====
+// Users live in this array for now
+const users = []
 
-// basic config values
+// Savings goals keyed by userId
+// { [userId]: [ { id, label, amount, lockUntil, ... } ] }
+const savingsByUserId = {}
+
+// ===== Basic config =====
 const PORT = process.env.PORT || 5001
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173'
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me'
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-change-this'
 
-// let Express read JSON from the body
+// Parse JSON bodies
 app.use(express.json())
 
-// let us read cookies like authToken
+// Parse cookies (for authToken)
 app.use(cookieParser())
 
-// allow your React frontend to talk to this API
+// Allow the React dev server to call this API
 app.use(
   cors({
     origin: CLIENT_URL,
@@ -42,15 +42,14 @@ app.use(
   })
 )
 
-// ===== helper: create a JWT token for a user id =====
+// ===== Helpers =====
+
+// Make a JWT token from a user id
 function createToken(userId) {
-  // payload = { userId }
-  // secret = JWT_SECRET
-  // expiresIn = 7 days
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' })
 }
 
-// ===== middleware: require auth on protected routes =====
+// Middleware: require a valid authToken cookie
 function authRequired(req, res, next) {
   const token = req.cookies.authToken
 
@@ -59,9 +58,7 @@ function authRequired(req, res, next) {
   }
 
   try {
-    // verify and decode the token
     const decoded = jwt.verify(token, JWT_SECRET)
-    // stash the userId on the request so routes can use it
     req.userId = decoded.userId
     next()
   } catch (err) {
@@ -70,7 +67,7 @@ function authRequired(req, res, next) {
   }
 }
 
-// ===== health check route =====
+// Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'auth backend is running.' })
 })
@@ -78,7 +75,6 @@ app.get('/api/health', (req, res) => {
 // ===== AUTH ROUTES =====
 
 // POST /api/auth/register
-// create a new user and log them in
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { email, password } = req.body
@@ -89,7 +85,6 @@ app.post('/api/auth/register', async (req, res) => {
         .json({ message: 'please enter an email and password.' })
     }
 
-    // check if email already exists (case-insensitive)
     const existing = users.find(
       (u) => u.email.toLowerCase() === email.toLowerCase()
     )
@@ -99,13 +94,11 @@ app.post('/api/auth/register', async (req, res) => {
         .json({ message: 'this email already has an account.' })
     }
 
-    // hash the password instead of storing plain text
     const salt = await bcrypt.genSalt(10)
     const passwordHash = await bcrypt.hash(password, salt)
 
-    // create a simple user object
     const newUser = {
-      id: String(Date.now()), // good enough for demo
+      id: String(Date.now()),
       email: email.toLowerCase().trim(),
       passwordHash,
     }
@@ -114,13 +107,12 @@ app.post('/api/auth/register', async (req, res) => {
 
     const token = createToken(newUser.id)
 
-    // store token in an httpOnly cookie so JS can't read it
     res
       .cookie('authToken', token, {
         httpOnly: true,
         secure: process.env.COOKIE_SECURE === 'true',
         sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       })
       .status(201)
       .json({
@@ -134,7 +126,6 @@ app.post('/api/auth/register', async (req, res) => {
 })
 
 // POST /api/auth/login
-// check email + password and log user in
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body
@@ -148,7 +139,6 @@ app.post('/api/auth/login', async (req, res) => {
     const user = users.find(
       (u) => u.email === email.toLowerCase().trim()
     )
-
     if (!user) {
       return res.status(401).json({ message: 'email or password is wrong.' })
     }
@@ -179,7 +169,6 @@ app.post('/api/auth/login', async (req, res) => {
 })
 
 // POST /api/auth/logout
-// clear the cookie and "log out"
 app.post('/api/auth/logout', (req, res) => {
   res
     .clearCookie('authToken', {
@@ -191,16 +180,16 @@ app.post('/api/auth/logout', (req, res) => {
     .json({ message: 'logged out.' })
 })
 
-// ===== SAVINGS ROUTES =====
+// ===== SAVINGS ROUTES (still in-memory) =====
 
-// GET /api/savings   (must be logged in)
+// GET /api/savings
 app.get('/api/savings', authRequired, (req, res) => {
   const userId = req.userId
   const goals = savingsByUserId[userId] || []
   res.json({ goals })
 })
 
-// POST /api/savings  (create a new savings goal)
+// POST /api/savings
 app.post('/api/savings', authRequired, (req, res) => {
   const userId = req.userId
   const { label, amount, lockUntil, emergencyAllowed } = req.body
@@ -220,9 +209,9 @@ app.post('/api/savings', authRequired, (req, res) => {
     id: String(Date.now()),
     label: String(label).trim(),
     amount: numericAmount,
-    lockUntil, // expected string date like "2025-12-31"
+    lockUntil,
     createdAt: new Date().toISOString(),
-    status: 'locked', // 'locked' | 'withdrawn'
+    status: 'locked',
     emergencyAllowed: !!emergencyAllowed,
     emergencyUsed: false,
   }
@@ -240,7 +229,6 @@ app.post('/api/savings', authRequired, (req, res) => {
 })
 
 // POST /api/savings/:id/emergency-withdraw
-// unlock the goal either because lock date passed OR emergency is allowed
 app.post('/api/savings/:id/emergency-withdraw', authRequired, (req, res) => {
   const userId = req.userId
   const goalId = req.params.id
@@ -277,7 +265,6 @@ app.post('/api/savings/:id/emergency-withdraw', authRequired, (req, res) => {
   })
 })
 
-// finally, start the server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })

@@ -1,54 +1,36 @@
 // src/pages/AuthPage.jsx
-// this page lets someone either log in or create an account.
-// it talks to my backend auth routes using the apiRequest helper.
+// lets someone log in or sign up, and talks to the backend auth routes.
 
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { apiRequest } from "../api.js"
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { apiRequest } from '../api.js'
 
 function AuthPage() {
-  // mode tells me if the user is logging in or signing up
-  const [mode, setMode] = useState("login")
-
-  // email + password text fields
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-
-  // message area to show success / errors
-  const [message, setMessage] = useState("success!")
-
-  // simple loading flag
+  const [mode, setMode] = useState('login') // 'login' or 'register'
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // allows me to change pages in React Router
   const navigate = useNavigate()
 
-  async function handleSubmit(event) {
-    // stop the browser from refreshing the page
-    event.preventDefault()
-
-    // clear any old message
-    setMessage("")
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setMessage('')
     setLoading(true)
 
     try {
-      // pick the correct backend path based on the mode
-      const path = mode === "login" ? "/auth/login" : "/auth/register"
+      const path = mode === 'login' ? '/auth/login' : '/auth/register'
 
-      // send the request to my backend
       const data = await apiRequest(path, {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify({ email, password }),
       })
 
-      // if the backend replies with a friendly message, show it
-      setMessage(data.message || "success.")
-
-      // if login / signup works, send the user to the dashboard demo
-      navigate("/dashboard")
-    } catch (error) {
-      // if something goes wrong, show that message to the user
-      setMessage(error.message)
+      setMessage(data.message || 'success.')
+      navigate('/dashboard')
+    } catch (err) {
+      setMessage(err.message)
     } finally {
       setLoading(false)
     }
@@ -58,25 +40,23 @@ function AuthPage() {
     <main className="auth">
       <h1>venus auth</h1>
 
-      {/* toggle buttons so I can switch between login and sign up */}
       <div className="auth-toggle">
         <button
           type="button"
-          className={mode === "login" ? "active" : ""}
-          onClick={() => setMode("login")}
+          className={mode === 'login' ? 'active' : ''}
+          onClick={() => setMode('login')}
         >
           log in
         </button>
         <button
           type="button"
-          className={mode === "register" ? "active" : ""}
-          onClick={() => setMode("register")}
+          className={mode === 'register' ? 'active' : ''}
+          onClick={() => setMode('register')}
         >
           sign up
         </button>
       </div>
 
-      {/* main form for email + password */}
       <form className="auth-form" onSubmit={handleSubmit}>
         <label>
           email
@@ -84,7 +64,7 @@ function AuthPage() {
             type="email"
             value={email}
             autoComplete="email"
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
         </label>
@@ -94,26 +74,25 @@ function AuthPage() {
           <input
             type="password"
             value={password}
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
-            onChange={(event) => setPassword(event.target.value)}
+            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+            onChange={(e) => setPassword(e.target.value)}
             required
           />
         </label>
 
         <button type="submit" disabled={loading}>
           {loading
-            ? "please wait..."
-            : mode === "login"
-            ? "log in"
-            : "create account"}
+            ? 'please wait...'
+            : mode === 'login'
+            ? 'log in'
+            : 'create account'}
         </button>
       </form>
 
-      {/* show success / error text under the form */}
       {message && <p className="auth-message">{message}</p>}
 
       <p className="auth-note">
-        this is just a demo. please don&apos;t use real banking passwords here.
+        this is just a prototype. please don&apos;t use real banking passwords here.
       </p>
     </main>
   )

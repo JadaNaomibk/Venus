@@ -15,7 +15,7 @@ function AuthPage() {
   const [password, setPassword] = useState("")
 
   // message area to show success / errors
-  const [message, setMessage] = useState("")
+  const [message, setMessage] = useState("success!")
 
   // simple loading flag
   const [loading, setLoading] = useState(false)

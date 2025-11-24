@@ -1,63 +1,55 @@
 // src/pages/AuthPage.jsx
-// This page lets the user either:
-// - log in to an existing account
-// - or create a new account
-// It talks to the backend using the apiRequest() helper.
+// this page lets someone either log in or create an account.
+// it talks to my backend auth routes using the apiRequest helper.
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { apiRequest } from "../api.js"
 
 function AuthPage() {
-  // "mode" tells us which action the user is doing: "login" or "register"
+  // mode tells me if the user is logging in or signing up
   const [mode, setMode] = useState("login")
 
-  // form fields
+  // email + password text fields
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
-  // feedback for the user (errors or success messages)
+  // message area to show success / errors
   const [message, setMessage] = useState("")
 
-  // loading = true while we are waiting for the backend
+  // simple loading flag
   const [loading, setLoading] = useState(false)
 
+  // allows me to change pages in React Router
   const navigate = useNavigate()
 
-  // This runs when the form is submitted (user clicks the button)
-  async function handleSubmit(e) {
-    e.preventDefault() // stop the page from refreshing
-    setMessage("") // clear any previous message
-    setLoading(true) // show that we are doing work
+  async function handleSubmit(event) {
+    // stop the browser from refreshing the page
+    event.preventDefault()
+
+    // clear any old message
+    setMessage("")
+    setLoading(true)
 
     try {
-      // 1) choose the backend path based on the mode
-      //    NOTE: apiRequest already adds "/api" and the base URL,
-      //    so here we only pass "/auth/login" or "/auth/register".
+      // pick the correct backend path based on the mode
       const path = mode === "login" ? "/auth/login" : "/auth/register"
 
-      // 2) send the request to the backend
+      // send the request to my backend
       const data = await apiRequest(path, {
         method: "POST",
-        body: JSON.stringify({
-          email,
-          password,
-        }),
+        body: JSON.stringify({ email, password }),
       })
 
-      // 3) if we reach here, the backend responded with 2xx (success)
-      //    so we can show the message from the server
+      // if the backend replies with a friendly message, show it
       setMessage(data.message || "success.")
 
-      // 4) after successful login / sign up,
-      //    send them back to the landing page for now
-      navigate("/")
-    } catch (err) {
-      // if the backend returned an error (4xx or 5xx)
-      // apiRequest threw an Error, so we catch it here
-      setMessage(err.message)
+      // if login / signup works, send the user to the dashboard demo
+      navigate("/dashboard")
+    } catch (error) {
+      // if something goes wrong, show that message to the user
+      setMessage(error.message)
     } finally {
-      // always turn loading off at the end
       setLoading(false)
     }
   }
@@ -66,7 +58,7 @@ function AuthPage() {
     <main className="auth">
       <h1>venus auth</h1>
 
-      {/* toggle between "log in" and "sign up" */}
+      {/* toggle buttons so I can switch between login and sign up */}
       <div className="auth-toggle">
         <button
           type="button"
@@ -75,7 +67,6 @@ function AuthPage() {
         >
           log in
         </button>
-
         <button
           type="button"
           className={mode === "register" ? "active" : ""}
@@ -85,7 +76,7 @@ function AuthPage() {
         </button>
       </div>
 
-      {/* the actual form */}
+      {/* main form for email + password */}
       <form className="auth-form" onSubmit={handleSubmit}>
         <label>
           email
@@ -93,7 +84,7 @@ function AuthPage() {
             type="email"
             value={email}
             autoComplete="email"
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(event) => setEmail(event.target.value)}
             required
           />
         </label>
@@ -104,7 +95,7 @@ function AuthPage() {
             type="password"
             value={password}
             autoComplete={mode === "login" ? "current-password" : "new-password"}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(event) => setPassword(event.target.value)}
             required
           />
         </label>
@@ -118,11 +109,11 @@ function AuthPage() {
         </button>
       </form>
 
-      {/* feedback message from the backend */}
+      {/* show success / error text under the form */}
       {message && <p className="auth-message">{message}</p>}
 
       <p className="auth-note">
-        this is just a prototype. please don&apos;t use real banking passwords here.
+        this is just a demo. please don&apos;t use real banking passwords here.
       </p>
     </main>
   )

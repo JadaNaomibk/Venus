@@ -1,6 +1,8 @@
-/* -------- DASHBOARD STYLES (lockable savings demo) -------- */
+/* ------------------------------
+   DASHBOARD LAYOUT + STYLING
+   ------------------------------ */
 
-main.dashboard {
+.dashboard {
   max-width: 720px;
   margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
@@ -8,7 +10,7 @@ main.dashboard {
 
 .dashboard-header h1 {
   text-align: center;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   margin-bottom: 0.5rem;
 }
@@ -16,41 +18,56 @@ main.dashboard {
 .dashboard-tagline {
   text-align: center;
   opacity: 0.8;
+  margin-bottom: 1.8rem;
+}
+
+.summary-bar {
+  display: flex;
+  gap: 1rem;
   margin-bottom: 2rem;
-  font-size: 0.95rem;
+}
+
+.summary-item {
+  flex: 1;
+  background: #090d18;
+  border-radius: 0.75rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #22273a;
+}
+
+.summary-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+  margin-bottom: 0.3rem;
+}
+
+.summary-value {
+  font-size: 1.3rem;
+  font-weight: 600;
 }
 
 .dashboard-section {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  border-radius: 1rem;
-  background: radial-gradient(circle at top left, #141825, #05090f);
-  border: 1px solid #262a3b;
+  margin-bottom: 2rem;
 }
-
-.dashboard-section h2 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
-}
-
-/* form */
 
 .goal-form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  background: #090d18;
+  border-radius: 0.75rem;
+  padding: 1.2rem;
+  border: 1px solid #22273a;
 }
 
-.field {
+.goal-form label {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-}
-
-.field-label {
-  font-size: 0.85rem;
-  opacity: 0.85;
+  gap: 0.3rem;
+  font-size: 0.9rem;
 }
 
 .goal-form input[type="text"],
@@ -58,8 +75,8 @@ main.dashboard {
 .goal-form input[type="date"] {
   padding: 0.6rem 0.8rem;
   border-radius: 0.5rem;
-  border: 1px solid #444;
-  background: #0b1018;
+  border: 1px solid #444c63;
+  background: #050812;
   color: #f5f5f5;
 }
 
@@ -67,39 +84,45 @@ main.dashboard {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
-/* goals list */
+.checkbox-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.goal-form button {
+  margin-top: 0.5rem;
+  align-self: flex-start;
+}
 
 .goals-list {
   list-style: none;
   padding: 0;
   margin: 0;
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
 }
 
 .goal-card {
+  background: #090d18;
+  border-radius: 0.75rem;
   padding: 1rem 1.1rem;
-  border-radius: 0.9rem;
-  border: 1px solid #262a3b;
-  background: #05070f;
+  border: 1px solid #22273a;
 }
 
-.goal-main {
+.goal-card-main {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 0.5rem;
+  margin-bottom: 0.3rem;
 }
 
-.goal-main h3 {
+.goal-card-main h3 {
   margin: 0;
   font-size: 1rem;
-  text-transform: capitalize;
 }
 
 .goal-amount {
@@ -108,34 +131,60 @@ main.dashboard {
 }
 
 .goal-meta {
-  margin: 0.25rem 0;
+  margin: 0.15rem 0;
   font-size: 0.85rem;
-  opacity: 0.9;
+  opacity: 0.85;
+}
+
+.goal-meta span {
+  opacity: 1;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.status-pill.locked {
+  background: #13b58a1a;
+  color: #4ff3c4;
+}
+
+.status-pill.withdrawn {
+  background: #ff4f4f1a;
+  color: #ff8a8a;
+}
+
+.status-pill.emergency {
+  background: #ffd84f1a;
+  color: #ffdd7a;
 }
 
 .secondary-button {
-  margin-top: 0.75rem;
-  padding: 0.5rem 1rem;
-  border-radius: 999px;
-  border: 1px solid #f5f5f5;
+  margin-top: 0.7rem;
   background: transparent;
+  border: 1px solid #444c63;
   color: #f5f5f5;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
   cursor: pointer;
   font-size: 0.85rem;
 }
 
 .secondary-button:hover {
-  background: rgba(245, 245, 245, 0.08);
+  background: #11162a;
 }
 
-.dashboard-empty {
-  margin-top: 0.5rem;
+.empty-state {
   font-size: 0.9rem;
-  opacity: 0.9;
+  opacity: 0.8;
 }
 
 .dashboard-message {
-  margin-top: 1.5rem;
-  text-align: center;
+  margin-top: 0.5rem;
   font-size: 0.9rem;
 }
